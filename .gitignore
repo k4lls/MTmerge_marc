@@ -1,1 +1,3 @@
-belle
+*.mod
+*.o
+*.test
