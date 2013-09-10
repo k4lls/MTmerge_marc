@@ -8,10 +8,12 @@ type z3d_info
     character(256)                          :: filename
 end type z3d_info
 
+!!! header
 type z3d_header
- !!! header
+ 
 end type z3d_header
 
+!!! Timeseries (binary)
 type z3d_ts
     integer,allocatable,dimension(:,:)      :: ts_in_memory
     integer                                 :: length_ts_in_memory
@@ -29,19 +31,23 @@ z3d_ts_object= z3d_ts(ts_in_memory,length_ts_in_memory)
 
 end function make_z3d_ts_object
 
+!subroutine add_filename(x,)
+
+!type(ts)          ::  x
+
+!x%filename=
+
+!end subroutine add_filename
 
 
 subroutine print_Ts(baby)
 
 type(z3d_ts),intent(inout) :: baby
 
-
-
 baby%length_ts_in_memory=34
 
 print *, baby%ts_in_memory
 print *, 'jolie fleur', baby%length_ts_in_memory
-
 
 end subroutine print_Ts
 
