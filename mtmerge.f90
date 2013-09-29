@@ -1,4 +1,4 @@
-program run
+program mtmerge
 !---------------------------------------------------------------------------------------
 ! Main program. 
 ! Convert Z3D files into MT CAC files.
@@ -22,10 +22,6 @@ integer                                         :: TS_write_length     !! CAC TS
 logical                                         :: status
 !---------------------------------------------------------------------------------------
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-call cpu_time(t1)   ! For timeing purposes
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
-
 !---------------------------------------------------------------------------------------
 ! 1 GET SCHEDULE FILE ------------------------------------------------------------------
 !---------------------------------------------------------------------------------------
@@ -33,6 +29,10 @@ call cpu_time(t1)   ! For timeing purposes
 call get_schedule(z3d_schOBJ,nb_schedule,envi)
 
 call log_3(nb_schedule)  !! Display Nb schedule message
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+call cpu_time(t1)   ! For timeing purposes
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
 
 do sch=1,nb_schedule
 
@@ -75,6 +75,7 @@ end do ! End of Schedule loop
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 call cpu_time(t2)
 print *, "processed in:", t2-t1, "seconds."
+read(*,*)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end program run
+end program mtmerge
