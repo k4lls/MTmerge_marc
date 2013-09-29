@@ -1,4 +1,9 @@
 program run
+!---------------------------------------------------------------------------------------
+! Main program. 
+! Convert Z3D files into MT CAC files.
+! Updated on 29/Sept/2013
+!---------------------------------------------------------------------------------------
 
 use param_data
 use z3d_file, only : mergeTS, syncZ3D
