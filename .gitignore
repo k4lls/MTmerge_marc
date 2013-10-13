@@ -1,3 +1,6 @@
 *.mod
 *.o
 *.test
+*.Z3D
+*.cac
+*.app
