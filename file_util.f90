@@ -6,7 +6,8 @@ MODULE File_Util
 !-------------------------------------------------------------------------------
 ! Public s/r
   PUBLIC Index_FName_PC     ! returns index + 1 of last occurrence of character "\" in sString
-  PUBLIC Index_FExt      ! returns index - 1 of last occurrence of character "." in sString
+  PUBLIC Index_FExt      ! returns index - 1 of last occurrence of character "ext" in sString
+  PUBLIC Index_FExt_beg  ! returns index - 1 of first occurrence of character "ext" in sString
   PUBLIC Index_FName_mac ! returns index + 1 of last occurrence of character "/" in sString
   PUBLIC row_sort_by2
   PUBLIC row_sort
@@ -40,11 +41,11 @@ MODULE File_Util
 
   INTEGER FUNCTION Index_FExt( sString , ext)
 !-------------------------------------------------------------------------------
-! Returns index of last occurence of character "." in sString - 1.
-! If "." is not in sString, returns nonblank length of string.
+! Returns index of last occurence of character in sString - 1.
+! If "ext" is not in sString, returns nonblank length of string.
 ! Used to get position of file name extension in a sString which may
 ! include directory tree structure.
-! Modified 21/Dec/98 by SCM.
+! Modified 21/Sep/13 by MB.
 !-------------------------------------------------------------------------------
 ! Arguments:
   CHARACTER(LEN=*), INTENT(IN) :: sString ! string to search from right to left
@@ -56,6 +57,31 @@ MODULE File_Util
       IF( Index_FExt<=0 ) Index_FExt = LEN_TRIM(sString)
     RETURN
   END FUNCTION Index_FExt
+
+!*******************************************************************************
+!*******************************************************************************
+
+  INTEGER FUNCTION Index_FExt_beg( sString , ext)
+!-------------------------------------------------------------------------------
+! Returns index of last occurence of character in sString - 1.
+! If "ext" is not in sString, returns nonblank length of string.
+! Used to get position of file name extension in a sString which may
+! include directory tree structure.
+! Modified 21/Sep/13 by MB.
+!-------------------------------------------------------------------------------
+! Arguments:
+  CHARACTER(LEN=*), INTENT(IN) :: sString ! string to search from right to left
+  CHARACTER(LEN=*), INTENT(IN) :: ext ! string to search from right to left
+!-------------------------------------------------------------------------------
+!     Search for leftmost occurence of "."
+      Index_FExt_2 = SCAN(sString,ext,BACK=.FALSE.) - 1
+!     If "." not present, return nonblank string length.
+      IF( Index_FExt_2<=0 ) Index_FExt_2 = LEN_TRIM(sString)
+    RETURN
+  END FUNCTION Index_FExt_beg
+
+!*******************************************************************************
+!*******************************************************************************
 
 !*******************************************************************************
 !*******************************************************************************

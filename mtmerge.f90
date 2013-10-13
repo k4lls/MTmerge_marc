@@ -6,9 +6,10 @@ program mtmerge
 !---------------------------------------------------------------------------------------
 
 use param_data
-use z3d_file, only : mergeTS, syncZ3D
-use z3d_data, only : generate_z3d_objs
-use z3d_schedule, only : get_schedule
+use z3d_file, only : mergeTS, syncZ3D   ! ( 5 / 3 )
+use z3d_data, only : generate_z3d_objs  ! ( 2 )
+use z3d_schedule, only : get_schedule   ! ( 1 )
+use cac_file, only : populate_CAC_OBJ   ! ( 4 )
 use log
 
 implicit none
@@ -42,7 +43,7 @@ do sch=1,nb_schedule
 ! 2 CREATE Z3D OBJECT and POPULATE WITH HEADER, META, CAL information ------------------
 !---------------------------------------------------------------------------------------
 
-  call generate_z3d_objs(z3d_schOBJ,z3d_HOBJ,z3d_MOBJ,z3d_COBJ,sch,envi)
+  call generate_z3d_objs(z3d_schOBJ,z3d_HOBJ,z3d_MOBJ,sch,envi)
 
 !---------------------------------------------------------------------------------------
 ! 3 FOUND FILE SYNC LOCATIONS ----------------------------------------------------------
@@ -55,14 +56,16 @@ do sch=1,nb_schedule
 !---------------------------------------------------------------------------------------
 
   if (status .eqv. .true.) then ! If SYNC OK then CONTINUE else GO TO next schedule.
-
-      call populate_CAC_header(cac_Hobj,z3d_schOBJ(sch),z3d_HOBJ,z3d_MOBJ,z3d_COBJ)
+    
+    ! Populate CAC object
+      call populate_CAC_OBJ(cac_Hobj,z3d_schOBJ(sch),z3d_HOBJ,z3d_MOBJ)
+    
     ! Display reading info message
       call log_6(z3d_schOBJ(sch)%inb_file,z3d_schOBJ(sch)%buffer_size,z3d_schOBJ(sch)%nb_buffer,z3d_schOBJ(sch)%res_bytes)
       call log_12(z3d_HOBJ(1:z3d_schOBJ(sch)%inb_file)%istart_time,z3d_HOBJ(1:z3d_schOBJ(sch)%inb_file)%istart_byte)
 
     !-----------------------------------------------------------------------------------
-    ! 5 MERGE TIMESERIES INTO CAC FILE -------------------------------------------------
+    ! 5 WRITE CAC FILE (HEADER + TS) ---------------------------------------------------
     !-----------------------------------------------------------------------------------
 
       call mergeTS(flag,z3d_schOBJ(sch)%inb_file,z3d_HOBJ,z3d_schOBJ,TS_write_length,sch,cac_Hobj,maxDroppingPoints)
@@ -75,7 +78,6 @@ end do ! End of Schedule loop
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 call cpu_time(t2)
 print *, "processed in:", t2-t1, "seconds."
-read(*,*)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end program mtmerge

@@ -4,6 +4,7 @@ private :: value_dr,value_sr,value_di,value_si
 private :: write_dr,write_sr,write_di,write_si
 private :: writeq_dr,writeq_sr,writeq_di,writeq_si
 public  :: datenum
+public  :: countsubstring
 
 interface value  ! Generic operator for converting a number string to a 
                  ! number. Calling syntax is 'call value(numstring,number,ios)' 
@@ -842,6 +843,21 @@ subroutine datenum(ts_str,ts_num)
     ts_num=ts_num*86400+HH*3600+MM*60+SS
 
 end subroutine datenum
+
+function countsubstring(s1, s2) result(c)
+  character(*), intent(in) :: s1, s2
+  integer :: c, p, posn
+ 
+  c = 0
+  if(len(s2) == 0) return
+  p = 1
+  do 
+    posn = index(s1(p:), s2)
+    if(posn == 0) return
+    c = c + 1
+    p = p + posn + len(s2)
+  end do
+end function
 
 end module str_util
 

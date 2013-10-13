@@ -8,14 +8,14 @@ use z3d_data
 use log
 
 ! Public methods
-public  ::  mergeTS
-public  ::  syncZ3D
+public  ::  mergeTS         ! Write final CAC file 
+public  ::  syncZ3D         ! Find file matching the sync
 ! Private methods
-private :: read_GPSstamps
-private :: z3d_found_sync
-private :: read_buffer_TS
-private :: get_buffer_info
-private :: checkSize
+private :: read_GPSstamps   ! Read GPS time stamp
+private :: z3d_found_sync   ! Find Z3D schedule sync
+private :: read_buffer_TS   ! Read a buffer of TS
+private :: get_buffer_info  ! Set the optimized buffer size based on the file sizes
+private :: checkSize        ! Check file size
 
 !-------------------------------------------------------------------------------
 contains
@@ -200,6 +200,8 @@ subroutine checkSize(nb_channel,ilength_file)
 ! Updated 28/Sep/13 by MB.
 !-------------------------------------------------------------------------------
 
+implicit none
+
 integer,intent(in)                               :: nb_channel
 integer                                          :: LL
 logical                                          :: file_exists
@@ -233,7 +235,6 @@ end do
     if (error1 .eqv. .false.) then   
         call log_10
     end if
-    
     if (error2 .eqv. .false.) then   
         call log_11
         read *, ilength_file(row)
@@ -269,11 +270,9 @@ integer,dimension(:),allocatable                 :: length_GPS_block
 integer, dimension(:,:,:),allocatable            :: timestamps_mem,timestamps
 integer,dimension(:,:),allocatable               :: selected_GPS
 integer                                          :: LL
-
 ! Types
 type(z3d_tTSH),dimension(:),intent(inout)        :: z3d_HOBJ
 type(z3d_tschedule),dimension(:),intent(inout)   :: sch_OBJ
-
 
 allocate(length_file(nb_channel))
 allocate(TS_bytes(nb_channel))
@@ -366,7 +365,7 @@ integer                                           :: TS_nb_buffer
 integer                                           :: total_bytes_residual
 integer                                           :: record_pos,n,fseek
 integer                                           :: TS_NPNT_pos
-integer*2                                         :: TS_record
+integer(2)                                        :: TS_record
 logical                                           :: status
 
 ! Define variables
@@ -406,7 +405,7 @@ open(999, file=CAC_file_name, action = 'write', access='stream', form='unformatt
 
 ! Write CAC record
 
-call CAC_header(999,TS_NPNT_pos,cac_OBJ)
+call write_CAC_header(999,TS_NPNT_pos,cac_OBJ)
 
 ! OPEN TS Record
 TS_record=16

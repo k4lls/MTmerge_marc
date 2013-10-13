@@ -4,6 +4,18 @@ module cac_file
 ! Updated 27/Sept/13 by MB
 !-------------------------------------------------------------------------------
 
+! Public methods
+public :: populate_CAC_OBJ             ! POPULATE CAC OBJ (called from mtmerge)
+public :: write_CAC_header             ! Write CAC header (called from z3d_file-mergeTS)
+public:: write_beginning_of_record_TS  ! Write the beginning of the TS record (called from z3d_file-mergeTS)
+! Private methods
+private :: merge_channel
+private :: write_record_nav            ! Write navigation record
+private :: write_record_meta           ! Write metadata and / or calibration
+private :: metadata                    ! Set the content of the metadata record
+private :: calibration                 ! Set the content of the calibration record
+private :: META_line                   ! write a line to CAC file and count the number of bytes
+
 ! Type Schedule
 type, public :: cac_tTSH
         character(10)                           :: cDate                ! Date
@@ -18,6 +30,8 @@ type, public :: cac_tTSH
         character(256)                          :: cChCMP               ! CH.CMP
         character(256)                          :: iChNumber            ! CH.NUMBER
         character(256)                          :: iChLength            ! CH.LENGHTH
+        character(8192),dimension(16)           :: CAL_LINES            ! CALIBRATION LINES
+        integer                                 :: cal_status           ! is there calibration status 
 end type cac_tTSH
 
 ! Generic interface
@@ -31,7 +45,7 @@ end type cac_tTSH
 !*******************************************************************************
 !*******************************************************************************
 
-subroutine populate_CAC_header(cac_Hobj,sch_OBJ,z3d_HOBJ,z3d_MOBJ,z3d_COBJ)
+subroutine populate_CAC_OBJ(cac_Hobj,sch_OBJ,z3d_HOBJ,z3d_MOBJ)
 !-------------------------------------------------------------------------------
 ! Populate CAC OBJECT
 ! Updated 27/Sept/13 by MB
@@ -47,10 +61,11 @@ subroutine populate_CAC_header(cac_Hobj,sch_OBJ,z3d_HOBJ,z3d_MOBJ,z3d_COBJ)
     type(z3d_tschedule),intent(inout)               :: sch_OBJ
     type(z3d_tTSH),dimension(:),intent(inout)       :: z3d_HOBJ
     type(z3d_tTSM),dimension(:),intent(inout)       :: z3d_MOBJ
-    type(z3d_tTSC),dimension(:),intent(inout)       :: z3d_COBJ
     character(256)                                  :: str
-    integer                                         :: i, I2
+    character(8192)                                 :: str_line
+    integer                                         :: i, j, I2
     integer                                         :: nb_channel,adc_rate,lp
+    integer                                         :: str_line_LL
     CHARACTER(256),dimension(:),allocatable         :: entite
     CHARACTER(8192)                                 :: sBuffer
 
@@ -112,9 +127,27 @@ subroutine populate_CAC_header(cac_Hobj,sch_OBJ,z3d_HOBJ,z3d_MOBJ,z3d_COBJ)
     call merge_channel(nb_channel,entite,sBuffer,I2)
     cac_Hobj%iChLength=sBuffer(1:I2)
     
+    50 format (F12.6,a1,F12.6,a1,F12.6,a1)
+    
+    cac_Hobj%cal_status=0
+    do i=1,nb_channel
+    
+    str_line=''
+    do j=1,z3d_MOBJ(i)%nb_cal_info
+    write(str,fmt=50) z3d_MOBJ(i)%cal_info(j,1),':', z3d_MOBJ(i)%cal_info(j,2),':', z3d_MOBJ(i)%cal_info(j,3),','
+    str_line=TRIM(str_line)//TRIM(str)
+    end do
+    
+    str_line_LL=len_trim(str_line)-1
+    
+    cac_Hobj%CAL_LINES(i)='CAL.SYS,'//z3d_MOBJ(i)%cal_serial//','//str_line(1:str_line_LL)
+    cac_Hobj%cal_status=len_trim(cac_Hobj%CAL_LINES(i))-17+cac_Hobj%cal_status
+    
+    end do
+    
     deallocate(entite)
     
-end subroutine populate_CAC_header
+end subroutine populate_CAC_OBJ
 
 !*******************************************************************************
 !*******************************************************************************
@@ -149,7 +182,7 @@ end subroutine merge_channel
 !*******************************************************************************
 !*******************************************************************************
 
-subroutine CAC_header(iunit,TS_NPNT_pos,cac_Hobj)
+subroutine write_CAC_header(iunit,TS_NPNT_pos,cac_Hobj)
 !-------------------------------------------------------------------------------
 ! Write Navigation, Metadata, Calibration records
 ! Updated 27/Sept/13 by MB
@@ -157,26 +190,25 @@ subroutine CAC_header(iunit,TS_NPNT_pos,cac_Hobj)
 
 implicit none
 
-integer,intent(in)                  :: iunit
-
+integer,intent(in)                       :: iunit
 integer                                  :: ilength_record
-integer*2                                :: itype
-integer*1,dimension(50)                  :: icontent_nav
+integer(2)                               :: itype
+integer(1),dimension(41)                 :: icontent_nav
 CHARACTER(8192)                          :: sBuffer
 integer                                  :: NBufLen
 integer,intent(out)                      :: TS_NPNT_pos
 type(cac_tTSH),intent(inout)             :: cac_Hobj
 
 
-! Nav record  -------
-ilength_record=52
+! Nav record  -------------------------
+ilength_record=43
 itype=4
 icontent_nav=0
 
 call write_record(iunit,ilength_record,itype,icontent_nav)
-! --------------------
+! -------------------------------------
 
-! Meta record --------
+! Meta record -------------------------
 call metadata(sBuffer,NBufLen,TS_NPNT_pos,cac_Hobj)
 
 ilength_record=NBufLen
@@ -185,9 +217,21 @@ itype=514
 TS_NPNT_pos=ftell(iunit)+10+TS_NPNT_pos+1
 
 call write_record(iunit,ilength_record,itype,sBuffer)
-! --------------------
+! -------------------------------------
 
-end subroutine CAC_header
+
+! Cal record -------------------------
+call calibration(sBuffer,NBufLen,cac_Hobj)
+
+ilength_record=NBufLen
+itype=528
+
+if (cac_Hobj%cal_status>0) then
+call write_record(iunit,ilength_record,itype,sBuffer)
+end if 
+! -------------------------------------
+
+end subroutine write_CAC_header
 
 !*******************************************************************************
 !*******************************************************************************
@@ -200,11 +244,11 @@ subroutine write_record_nav(iunit,ilength_record,itype,icontent)
 
 implicit none
 
-integer                             :: iflag=-1
-integer,intent(in)                  :: ilength_record
-integer*2,intent(in)                :: itype
-integer,intent(in)                  :: iunit
-integer*1,dimension(:),intent(in)   :: icontent
+integer                              :: iflag=-1
+integer,intent(in)                   :: ilength_record
+integer(2),intent(in)                :: itype
+integer,intent(in)                   :: iunit
+integer(1),dimension(:),intent(in)   :: icontent
 
     write(iunit), ilength_record, iflag, itype, icontent, ilength_record
 
@@ -216,13 +260,15 @@ subroutine write_record_meta(iunit,ilength_record,itype,icontent)
 ! Updated 27/Sept/13 by MB
 !-------------------------------------------------------------------------------
 
-integer                             :: iflag=-1
-integer,intent(in)                  :: ilength_record
-integer*2,intent(in)                :: itype
-integer,intent(in)                  :: iunit
-CHARACTER(8192),intent(out)         :: icontent
+implicit none
 
-    write(iunit), ilength_record+2, iflag, itype, icontent(1:ilength_record), ilength_record+2
+integer                              :: iflag=-1
+integer,intent(in)                   :: ilength_record
+integer(2),intent(in)                :: itype
+integer,intent(in)                   :: iunit
+CHARACTER(8192),intent(out)          :: icontent
+
+write(iunit), ilength_record+2, iflag, itype, icontent(1:ilength_record), ilength_record+2
 
 end subroutine write_record_meta
 
@@ -235,9 +281,11 @@ subroutine write_beginning_of_record_TS(iunit,ilength_record,itype,record_pos)
 ! Updated 27/Sept/13 by MB
 !-------------------------------------------------------------------------------
 
+implicit none
+
 integer                             :: iflag=-1
 integer,intent(in)                  :: ilength_record
-integer*2,intent(in)                :: itype
+integer(2),intent(in)               :: itype
 integer,intent(in)                  :: iunit
 integer,intent(out)                 :: record_pos
 
@@ -331,6 +379,49 @@ subroutine metadata(sBuffer,NBufLen,TS_NPNT_pos,cac_Hobj)
       NBufLen= I2
       
 end subroutine metadata
+    
+!*******************************************************************************
+!*******************************************************************************
+
+subroutine calibration(sBuffer,NBufLen,cac_Hobj)
+!-------------------------------------------------------------------------------
+! Generate metadata content
+! Updated 27/Sept/13 by MB
+!-------------------------------------------------------------------------------
+
+    use str_util
+
+    implicit none
+
+! Local variables
+  INTEGER                                         :: I1, I2
+  CHARACTER(256)                                  :: sRecord
+  CHARACTER(8192),intent(out)                     :: sBuffer
+  integer,intent(out)                             :: NBufLen
+  type(cac_tTSH),intent(inout)                    :: cac_Hobj
+  integer                                         :: i,nb_channel, ios
+  
+  call value(cac_Hobj%cNbChannel,nb_channel,ios)
+
+      I2=0
+
+      sRecord = 'HEADER.TYPE,Calibrate'
+      call META_line(sRecord,I1,I2,sBuffer)
+      
+      sRecord = 'CAL.VER,0.21'
+      call META_line(sRecord,I1,I2,sBuffer)
+        
+    do i=1,nb_channel
+      sRecord = cac_Hobj%CAL_LINES(i)
+      if (len_trim(sRecord)>17) then
+      call META_line(sRecord,I1,I2,sBuffer)
+      end if
+    end do
+           
+!     Update buffer length
+      NBufLen= I2
+      
+end subroutine calibration
     
 !*******************************************************************************
 !*******************************************************************************

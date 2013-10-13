@@ -48,9 +48,8 @@ subroutine get_all_Z3Ds_UNIX(file_names,Total_Z3D)
   integer                                                :: i,reason,iStation,count
   real                                                   :: r
 
-
+! Find Z3D file (avoid file smaller than 500 ko)
 call system('find ./ -type f \( -iname "*.z3d" \) -size +1000 > l')
-! avoid file smaller than 500 ko
 
 open(31,FILE='l',action="read")
   i = 0
@@ -70,7 +69,7 @@ end do
 
 close(31)
 
-!call system('rm l')
+call system('rm l')
 
 
 end subroutine get_all_Z3Ds_UNIX
