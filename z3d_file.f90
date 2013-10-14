@@ -89,10 +89,6 @@ integer                                          :: buffer_size_used
     buffer_size_used=length_file/4
     end if
     
-    print *, 'buffer_size', buffer_size
-    print *, 'length_file', length_file/4
-    print *, 'buffer_size_used', buffer_size_used
-    
     allocate(buffer(buffer_size_used,1))
     
     ! Open Z3D file

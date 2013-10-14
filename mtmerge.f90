@@ -32,6 +32,8 @@ call log_13
 
 call get_schedule(z3d_schOBJ,nb_schedule,envi)
 
+if (nb_schedule>0) then 
+
 call log_3(nb_schedule)  !! Display Nb schedule message
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -82,5 +84,7 @@ end do ! End of Schedule loop
 call cpu_time(t2)
 print *, "processed in:", t2-t1, "seconds."
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+end if
 
 end program mtmerge

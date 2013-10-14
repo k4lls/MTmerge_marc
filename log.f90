@@ -282,12 +282,12 @@ subroutine log_13
 ! Display Zonge Copyrights
 ! Updated 27/Sept/13 by MB
 !-------------------------------------------------------------------------------
-write (*,*), ''
-write (*,*), '---------------------------------------------------------------------'
-write (*,*), 'Zonge International,Inc'
-write (*,*), '3322 East Fort Lowell, 85716 TUCSON, USA'
-write (*,*), 'MTmerge v.2 updated on the 14/Oct/2013 by MB'
-write (*,*), '---------------------------------------------------------------------'
+print *, ''
+print *, '---------------------------------------------------------------------'
+print *, 'Zonge International,Inc'
+print *, '3322 East Fort Lowell, 85716 TUCSON, USA'
+print *, 'MTmerge v.2 updated on the 14/Oct/2013 by MB'
+print *, '---------------------------------------------------------------------'
 
 end subroutine log_13 
 

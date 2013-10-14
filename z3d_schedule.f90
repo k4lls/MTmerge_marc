@@ -199,6 +199,8 @@ end if
 
 call log_1(Total_Z3D)
 
+if (Total_Z3D>0) then
+
 allocate(headers(Total_Z3D,5))
 allocate(date_time(Total_Z3D,2))
 
@@ -238,6 +240,8 @@ call find_schedule(file_names,Total_Z3D,headers,z3d_schOBJ,nb_schedule,date_time
 
 deallocate(headers)
 deallocate(date_time)
+
+end if
 
 end subroutine get_schedule
 
