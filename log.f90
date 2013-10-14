@@ -103,7 +103,7 @@ end subroutine log_4
 !*******************************************************************************
 !*******************************************************************************
 
-subroutine log_5(status,nb_channel,timestamps)
+subroutine log_5(status,nb_channel,timestamps,GPS_start,length_used)
 !-------------------------------------------------------------------------------
 ! Display Syncing status
 ! Updated 27/Sept/13 by MB
@@ -113,15 +113,20 @@ implicit none
 
 logical,intent(in)                      :: status
 integer,intent(in)                      :: nb_channel
+integer,intent(in)                      :: length_used
+integer,intent(in)                      :: GPS_start
 integer,dimension(:,:,:),intent(in)     :: timestamps
 integer                                 :: row
+integer                                 :: max_length
+
+max_length=length_used
+if (length_used>8) then
+max_length=8
+end if
 
     if (status .eqv. .false.) then
         print *, '------------------------------'
         print *, 'Error : Sync fail, found no reference GPS timestamps though out channels'
-        do row=1,nb_channel
-        print *, timestamps(1:16,1,row)
-        end do
         print *, '------------------------------'
         print *, char(7)  ! bip
         print *, 'Press Enter to continue' 
@@ -130,6 +135,7 @@ integer                                 :: row
         print *, '------------------------------'
         print *, 'Files are correctly Synced ---'
         print *, '------------------------------'
+
     end if
 
 end subroutine log_5
@@ -266,5 +272,18 @@ integer,dimension(:),intent(in)                          :: istart_byte
 
 end subroutine log_12
 
+subroutine log_13 
+!-------------------------------------------------------------------------------
+! Display Zonge Copyrights
+! Updated 27/Sept/13 by MB
+!-------------------------------------------------------------------------------
+write (*,*), ''
+write (*,*), '---------------------------------------------------------------------'
+write (*,*), 'Zonge International,Inc'
+write (*,*), '3322 East Fort Lowell, 85716 TUCSON, USA'
+write (*,*), 'MTmerge v.2 updated on the 14/Oct/2013 by MB'
+write (*,*), '---------------------------------------------------------------------'
+
+end subroutine log_13 
 
 end module log

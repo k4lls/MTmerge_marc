@@ -7,7 +7,7 @@ module cac_file
 ! Public methods
 public :: populate_CAC_OBJ             ! POPULATE CAC OBJ (called from mtmerge)
 public :: write_CAC_header             ! Write CAC header (called from z3d_file-mergeTS)
-public:: write_beginning_of_record_TS  ! Write the beginning of the TS record (called from z3d_file-mergeTS)
+public :: write_beginning_of_record_TS  ! Write the beginning of the TS record (called from z3d_file-mergeTS)
 ! Private methods
 private :: merge_channel
 private :: write_record_nav            ! Write navigation record

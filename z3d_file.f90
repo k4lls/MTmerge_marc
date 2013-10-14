@@ -69,17 +69,23 @@ character(len=1280), intent(in)                  :: full_filename
 integer,intent(in)                               :: buffer_size
 integer,dimension(:,:),intent(out)               :: GPS_block
 integer, intent(out)                             :: length_file,length_GPS_block
-integer,dimension(:,:)                           :: buffer(buffer_size,1)
+integer,dimension(:,:),allocatable               :: buffer
 integer                                          :: j, bit, flag_inc, bit_offset
 integer,intent(in)                               :: file_size
 integer                                          :: buffer_read, flag
-   
+integer                                          :: buffer_size_used
+
     
     ! Correct if header is not a binary number (ex: user manually changed header) & get total number of bytes
     bit=1
     bit_offset=mod(file_size,4)
     bit=bit+bit_offset
-    length_file=file_size-bit_offset
+    length_file=file_size-bit_offset    
+
+    ! Set buffer
+    buffer_size_used=buffer_size
+    
+    allocate(buffer(buffer_size_used,1))
     
     ! Open Z3D file
     open(unit=1, file =full_filename, action = 'read', access='stream', form='unformatted')
@@ -88,7 +94,7 @@ integer                                          :: buffer_read, flag
     flag_inc=1
     j=1        
     read(unit=1, pos=bit) buffer
-    do buffer_read=1,buffer_size
+    do buffer_read=1,buffer_size_used
         if (buffer(j,1)==flag) then
             GPS_block(flag_inc,1) = buffer(j+1,1)/1024    ! get first GPS stamp
             GPS_block(flag_inc,2) = bit+(j+8)*4           ! bit pointer
@@ -97,13 +103,14 @@ integer                                          :: buffer_read, flag
         else
             j=j+1
         end if
-        if (j >= buffer_size-1) exit
+        if (j >= buffer_size_used-1) exit
     end do
     
-    bit=bit+buffer_size*4
     length_GPS_block=flag_inc-1
 
-    close (1)      
+    close (1) 
+    
+    deallocate(buffer)    
    
 end subroutine 
 
@@ -151,7 +158,7 @@ do timestamps_test=GPS_start,length_used
     if (status .eqv. .true.) exit  
 end do
 
-call log_5(status,nb_channel,timestamps) !! Display Syncing message
+call log_5(status,nb_channel,timestamps,GPS_start,length_used) !! Display Syncing message
    
 end subroutine z3d_found_sync
 
@@ -270,6 +277,7 @@ integer,dimension(:),allocatable                 :: length_GPS_block
 integer, dimension(:,:,:),allocatable            :: timestamps_mem,timestamps
 integer,dimension(:,:),allocatable               :: selected_GPS
 integer                                          :: LL
+
 ! Types
 type(z3d_tTSH),dimension(:),intent(inout)        :: z3d_HOBJ
 type(z3d_tschedule),dimension(:),intent(inout)   :: sch_OBJ
@@ -283,11 +291,15 @@ allocate(selected_GPS(nb_channel,2))
 ! Check size
 call checkSize(nb_channel,z3d_HOBJ(1:nb_channel)%ilength_file)
 
+
+
 do row=1,nb_channel
 ! get for timestamp array
 LL=z3d_HOBJ(row)%ilength_file
 call read_GPSstamps(z3d_HOBJ(row)%cfull_filename,GPS_buf_size,length_file(row),timestamps_mem(:,:,row),length_GPS_block(row),LL)
 end do
+
+
 
 ! Find smallest timestamp array
 min_length_GPS = MINVAL(length_GPS_block(1:nb_channel))
@@ -304,7 +316,6 @@ TS_bytes=(length_file(1:nb_channel)-selected_GPS(:,2))/4
 
 ! Abord if sync failed
 if (status .eqv. .true.) then
-
 
 ! Find optimal buffer
 call get_buffer_info(TS_bytes,sch_OBJ(sch)%nb_buffer,sch_OBJ(sch)%buffer_size,sch_OBJ(sch)%res_bytes)
