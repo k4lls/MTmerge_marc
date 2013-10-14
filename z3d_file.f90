@@ -291,15 +291,11 @@ allocate(selected_GPS(nb_channel,2))
 ! Check size
 call checkSize(nb_channel,z3d_HOBJ(1:nb_channel)%ilength_file)
 
-
-
 do row=1,nb_channel
 ! get for timestamp array
 LL=z3d_HOBJ(row)%ilength_file
 call read_GPSstamps(z3d_HOBJ(row)%cfull_filename,GPS_buf_size,length_file(row),timestamps_mem(:,:,row),length_GPS_block(row),LL)
 end do
-
-
 
 ! Find smallest timestamp array
 min_length_GPS = MINVAL(length_GPS_block(1:nb_channel))
@@ -332,6 +328,7 @@ deallocate(length_GPS_block)
 deallocate(timestamps_mem)
 deallocate(timestamps)
 deallocate(selected_GPS)
+deallocate(length_file)
 
 end subroutine
 
