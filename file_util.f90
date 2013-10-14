@@ -193,18 +193,20 @@ subroutine row_sort_by2(A, c1, c2)
         print *, "Error: Array column selections out of range!"
         return
     end if
-
+    
     call row_sort(A, c1)
 
     x = 1
     k = 1
-    do i=1, size(A,1)
+    do i=1, size(A,1)-1
         if (A(i+1,c1) /= A(i,c1)) then
             call row_sort(A(x:k,:), c2)
             x = k+1
         end if
             k = k+1
     end do
+    call row_sort(A(x:k,:), c2)
+    
 end subroutine row_sort_by2
 
 END MODULE File_Util

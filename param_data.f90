@@ -11,7 +11,7 @@ use cac_file
 ! Parameters
 integer,public,parameter                        :: envi=0                     !! Unix(Linux,mac)=0 or M-dos Windows system=1
 integer,public,parameter                        :: GPS_start=4                !! syncZ3D : Skip 4 first seconds (known garbage data)
-integer,public,parameter                        :: GPS_buf_size=2**17         !! syncZ3D : Buffer used to sync channels
+integer,public,parameter                        :: GPS_buf_size=2**22         !! syncZ3D : Buffer used to sync channels
 integer,public,parameter                        :: allocMem=512               !! syncZ3D : Maximum number of Timestamps memory available          
 integer,public,parameter                        :: flag=-1                    !! mergeTS : Always -1 (ff ff ff ff) 
 integer,public,parameter                        :: maxDroppingPoints=4096     !! Maximum allowed dropping points

@@ -57,7 +57,7 @@ end subroutine get_buffer_info
 !*******************************************************************************
 !*******************************************************************************
 
-subroutine read_GPSstamps(full_filename,buffer_size,length_file,GPS_block,length_GPS_block,file_size)
+subroutine read_GPSstamps(full_filename,buffer_size,allocMem,length_file,GPS_block,length_GPS_block,file_size)
 !-------------------------------------------------------------------------------
 ! Read GPS timestamps and output array of first values.
 ! Updated 15/Sep/13 by MB.
@@ -67,6 +67,7 @@ implicit none
 
 character(len=1280), intent(in)                  :: full_filename
 integer,intent(in)                               :: buffer_size
+integer,intent(in)                               :: allocMem
 integer,dimension(:,:),intent(out)               :: GPS_block
 integer, intent(out)                             :: length_file,length_GPS_block
 integer,dimension(:,:),allocatable               :: buffer
@@ -84,6 +85,13 @@ integer                                          :: buffer_size_used
 
     ! Set buffer
     buffer_size_used=buffer_size
+    if (buffer_size_used>length_file/4) then
+    buffer_size_used=length_file/4
+    end if
+    
+    print *, 'buffer_size', buffer_size
+    print *, 'length_file', length_file/4
+    print *, 'buffer_size_used', buffer_size_used
     
     allocate(buffer(buffer_size_used,1))
     
@@ -103,7 +111,7 @@ integer                                          :: buffer_size_used
         else
             j=j+1
         end if
-        if (j >= buffer_size_used-1) exit
+        if (j >= buffer_size_used-1 .or. flag_inc>=allocMem-1) exit
     end do
     
     length_GPS_block=flag_inc-1
@@ -252,7 +260,7 @@ end subroutine checkSize
 !*******************************************************************************
 !*******************************************************************************
 
-subroutine syncZ3D(full_filename,nb_channel,GPS_start,GPS_buf_size,allocMem,z3d_HOBJ,sch_OBJ,sch,status)
+subroutine syncZ3D(full_filename,nb_channel,GPS_start,GPSbu,alMem,z3d_HOBJ,sch_OBJ,sch,status)
 !-------------------------------------------------------------------------------
 ! Find Start time and byte for all the schedule files
 ! Updated 16/Sep/13 by MB.
@@ -265,8 +273,8 @@ implicit none
 character(len=1280),dimension(:),intent(in)      :: full_filename
 integer,intent(in)                               :: nb_channel
 integer,intent(in)                               :: GPS_start ! skip 4 first seconds (known garbage data)
-integer,intent(in)                               :: GPS_buf_size
-integer,intent(in)                               :: allocMem
+integer,intent(in)                               :: GPSbu
+integer,intent(in)                               :: alMem
 integer,intent(in)                               :: sch
 ! Local variable
 integer,dimension(:),allocatable                 :: length_file,TS_bytes
@@ -285,7 +293,7 @@ type(z3d_tschedule),dimension(:),intent(inout)   :: sch_OBJ
 allocate(length_file(nb_channel))
 allocate(TS_bytes(nb_channel))
 allocate(length_GPS_block(nb_channel))
-allocate(timestamps_mem(allocMem,2,nb_channel))
+allocate(timestamps_mem(alMem,2,nb_channel))
 allocate(selected_GPS(nb_channel,2))
 
 ! Check size
@@ -294,7 +302,7 @@ call checkSize(nb_channel,z3d_HOBJ(1:nb_channel)%ilength_file)
 do row=1,nb_channel
 ! get for timestamp array
 LL=z3d_HOBJ(row)%ilength_file
-call read_GPSstamps(z3d_HOBJ(row)%cfull_filename,GPS_buf_size,length_file(row),timestamps_mem(:,:,row),length_GPS_block(row),LL)
+call read_GPSstamps(z3d_HOBJ(row)%cfull_filename,GPSbu,alMem,length_file(row),timestamps_mem(:,:,row),length_GPS_block(row),LL)
 end do
 
 ! Find smallest timestamp array
@@ -425,7 +433,7 @@ do buffering=1,TS_nb_buffer
 ! 1- Get Z3D TS buffer -----------------
 do row=1,nb_channel     
     call read_buffer_TS(row,TS_buf_size,pos_bit(row),flag,TS_buffer(:,row),length_TS_buffer(row),val(row))
-    TS_write_buffer(test_extra(row)+1:test_extra(row)+length_TS_buffer(row),row)=TS_buffer(:,row)
+    TS_write_buffer(test_extra(row)+1:test_extra(row)+length_TS_buffer(row),row)=TS_buffer(1:length_TS_buffer(row),row)
     pos_bit(row)=pos_bit(row)+TS_buf_size*4;        
 end do
 

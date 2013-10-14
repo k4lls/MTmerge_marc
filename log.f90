@@ -35,17 +35,20 @@ integer,intent(in)                                                  :: Total_Z3d
 character(10),dimension(:,:),allocatable,intent(in)                 :: date_time
 character(1280),dimension(:),allocatable,intent(in)                 :: file_names
 integer*8,dimension(:,:),allocatable,intent(in)                     :: headers
-integer                                                             :: i
+integer                                                             :: i,j
 
 
     print *, 'Date  -  ','Time  -  ','Channel Nb  -  ','bytes  -  ','SR  -  ','path'
     print *, '-------------------------------------------------------------------------------------------------'
-    do i=1,Total_Z3D
+    
+    do i=1,Total_Z3D-1
       print *, trim(date_time(headers(i,1),1)),' ',trim(date_time(headers(i,1),2)),' ',headers(i,3:5),trim(file_names(headers(i,1)))
       if (headers(i, 2) /= headers(i+1, 2)) then
             print *, '-------------------------------------------------------------------------------------------------'
       end if
-end do
+    end do
+    j=Total_Z3D
+    print *, trim(date_time(headers(j,1),1)),' ',trim(date_time(headers(j,1),2)),' ',headers(j,3:5),trim(file_names(headers(j,1)))
 
 end subroutine log_2
 
@@ -200,8 +203,10 @@ integer,dimension(:),intent(in)     :: test_extra
       print *, '----------------------------------------------------------------------'      
       print *, 'CAC_buffer_memory is overload : Deficient channel are missing more than', maxDroppingPoints
       print *, 'at Buffer :', buffering, 'Missing points per channel :', maxTestExtra-test_extra
-      print *, 'The CAC file is still readable but most likely corrupted'
+      print *, 'The CAC file is still readable but most likely corrupted (Try to avoid using it)'
       print *, '----------------------------------------------------------------------'
+      print *, 'Press Enter to continue' 
+      read( *, * ) 
 
 end subroutine log_8
 

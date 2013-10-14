@@ -135,12 +135,13 @@ subroutine find_schedule(file_names,Total_Z3D,headers,z3d_schOBJ,nb_schedule,dat
     integer,intent(in)                                   :: Total_Z3D   ! Number of Files
     type(z3d_tschedule),dimension(:),intent(inout)       :: z3d_schOBJ
     integer,intent(out)                                  :: nb_schedule
-    integer                                              :: i, j, k     ! Number of Channels per cac file indexes
+    integer                                              :: i, j, k , l     ! Number of Channels per cac file indexes
     
     nb_schedule=1
     k=0
     j=1
-    do i=1, Total_Z3D
+    l=0
+    do i=1,Total_Z3D-1
         k=k+1
         if (headers(i, 2) /= headers(i+1, 2)) then
             z3d_schOBJ(nb_schedule)%cfiles(1:k)=file_names(headers(j:i,1))
@@ -148,12 +149,19 @@ subroutine find_schedule(file_names,Total_Z3D,headers,z3d_schOBJ,nb_schedule,dat
             z3d_schOBJ(nb_schedule)%cDate=date_time(headers(j,1),1)
             z3d_schOBJ(nb_schedule)%cTime=date_time(headers(j,1),2)
             z3d_schOBJ(nb_schedule)%iADCrate=headers(j,5)
+            l=l+k
             k=0
             j=i+1
             nb_schedule=nb_schedule+1
         end if
     end do
-            nb_schedule=nb_schedule-1
+            i=Total_Z3D
+            k=i-l
+            z3d_schOBJ(nb_schedule)%cfiles(1:k)=file_names(headers(j:i,1))
+            z3d_schOBJ(nb_schedule)%inb_file=k
+            z3d_schOBJ(nb_schedule)%cDate=date_time(headers(j,1),1)
+            z3d_schOBJ(nb_schedule)%cTime=date_time(headers(j,1),2)
+            z3d_schOBJ(nb_schedule)%iADCrate=headers(j,5)
 
 end subroutine find_schedule
 
