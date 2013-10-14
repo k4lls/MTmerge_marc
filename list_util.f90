@@ -865,7 +865,6 @@ MODULE List_Util
         END IF
         RETURN
       END IF
-
 !     Is input guess useful?
       IF ( JLO<=0 .OR. JLO>NList ) THEN ! input guess not useful, go directly to bisection
         JLO = 0
